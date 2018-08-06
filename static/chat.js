@@ -103,6 +103,5 @@ var updater = {
 		}
 		
 		$("room-"+message.room).append(node);
-		//$("inbox").append(node);
 	}
 };
