@@ -1,0 +1,73 @@
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: white;
+  margin: 0;
+}
+
+body,
+input {
+  font-family: sans-serif;
+  font-size: 10pt;
+  color: black;
+}
+
+table {
+  border-collapse: collapse;
+  border: 0;
+}
+
+td {
+  border: 0;
+  padding: 0;
+}
+
+.time {
+  color: blue;
+}
+
+.name {
+  color: #FF8C00;
+  font-weight: bold;
+}
+
+.embed_img {
+  vertical-align: top;
+  padding-left: 50px;
+}
+
+#body {
+  position: absolute;
+  left: 10px;
+  height: 100%;
+  width: 100%;
+}
+
+#input {
+  margin-top: 0.5em;
+}
+
+#inbox {
+  overflow-y: scroll;
+  height: calc(100% - 40px);
+  width: calc(100% - 10px);
+}
+
+#inbox .message {
+  padding-top: 0.25em;
+}
+
+#nav {
+  float: right;
+  z-index: 99;
+}
