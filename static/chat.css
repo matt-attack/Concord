@@ -1,6 +1,7 @@
 
 html {
   height: 100%;
+  box-sizing: border-box;
 }
 
 body {
@@ -11,15 +12,17 @@ body {
 }
 
 body {
-  background: white;
+  background: #1e1e1e;
   margin: 0;
-}
-
-body,
-input {
   font-family: sans-serif;
   font-size: 10pt;
-  color: black;
+  color: white;
+}
+
+input
+{
+  font-family: sans-serif;
+  font-size: 10pt;
 }
 
 table {
@@ -33,7 +36,7 @@ td {
 }
 
 .time {
-  color: blue;
+  color: white;
 }
 
 .name {
@@ -44,23 +47,78 @@ td {
 .embed_img {
   vertical-align: top;
   padding-left: 50px;
+  padding-top: 10px;
 }
 
-#body {
-  position: absolute;
-  left: 10px;
+#chat_area {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+#text_block {
   height: 100%;
   width: 100%;
 }
 
+#users {
+  width: 180px;
+  font-size: 16px;
+  padding: 10px;
+}
+
+#users_title {
+  text-align: center;
+}
+
+#rooms {
+  width: 260px;
+  font-size: 16pt;
+  background: #707070;
+}
+
+#rooms_title {
+  text-align: center;
+  background: #505050;
+  padding: 5px;
+}
+
+.room_button {
+  padding-left: 10px;
+}
+
+#header {
+  height: 40px;
+  background: black;
+  font-size: 18px;
+  text-align: center;
+  padding-top: 12px;
+}
+
+#body {
+  position: absolute;
+  padding: 0px;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
 #input {
   margin-top: 0.5em;
+  color: black;
+  padding-left: 10px;
+  width: 100%;
 }
 
 #inbox {
+  padding-top: 5px;
   overflow-y: scroll;
-  height: calc(100% - 40px);
-  width: calc(100% - 10px);
+  height: calc(100% - 90px);
+  width: 100%;
+  padding-left: 10px;
+  box-sizing: border-box;
 }
 
 #inbox .message {

@@ -29,20 +29,13 @@ document.addEventListener("DOMContentLoaded", function() {
 function newMessage(form) {
 	var message = {};
 	message.body = $('message').value;
-	message.room = "General";
+	message.room = current_room;
 	updater.socket.send(JSON.stringify(message));
 	$('message').value = "";
 }
 
-var formToDict = function(thiss) {
-	var fields = thiss.serializeArray();
-	var json = {}
-	for (var i = 0; i < fields.length; i++) {
-		json[fields[i].name] = fields[i].value;
-	}
-	if (json.next) delete json.next;
-	return json;
-};
+var rooms = [];
+var current_room = "General";
 
 var updater = {
 	socket: null,
@@ -52,17 +45,56 @@ var updater = {
 		updater.socket = new WebSocket(url);
 		updater.socket.onmessage = function(event) {
 			var jdata = JSON.parse(event.data);
-			if (jdata["add_room"] != null) {
+			if (jdata["add_user"] != null) {
+				var user_button = document.createElement("div");
+				user_button.id = "user-button-" + jdata["add_user"];
+				user_button.className = "user_button";
+				user_button.innerHTML = jdata["add_user"];
+				$("users").append(user_button);
+			}
+			else if (jdata["remove_user"] != null) {
+				var elem = document.getElementById("user-button-" + jdata["remove_user"]);
+				elem.parentNode.removeChild(elem);
+			}
+			else if (jdata["add_room"] != null) {
 				console.log("Got room");
+				
+				var room_name = jdata["add_room"];
+				var description = jdata["description"];
 				
 				// Add the room
 				var room = document.createElement("div");
-				room.id = "room-" + jdata["add_room"];
+				room.id = "room-" + room_name;
 				$("inbox").append(room);
 				
-				//room.style.display = "none";//hides the room
+				room.description = description;
+				rooms[rooms.length] = room;
+				
+				if (rooms.length > 1) {
+					room.style.display = "none";//hides the room
+				}
+				else {
+					current_room = room_name;
+					$("header").innerHTML = room_name + ": " + description;
+				}
 				
 				// Need to also add room links
+				var room_button = document.createElement("div");
+				room_button.id = "room-button-" + jdata["add_room"];
+				room_button.className = "room_button";
+				room_button.innerHTML = room_name;
+				room_button.addEventListener("click", function() {
+					for (var i = 0; i < rooms.length; i++)
+					{
+						rooms[i].style.display = "none";
+					}
+					var room = $("room-" + room_name);
+					room.style.display = "";
+					current_room = room_name;
+					$("header").innerHTML = room_name + ": " + room.description;
+					return false;
+				}.bind(room_name));
+				$("rooms").append(room_button);
 			}
 			else {
 				updater.showMessage(jdata);
@@ -75,7 +107,7 @@ var updater = {
 		if (existing != null) return;
 		
 		var node = document.createElement("div");
-		node.class = "message";
+		node.className = "message";
 		node.id = 'm' + message.id;
 		
 		// Format time and actually add the message
