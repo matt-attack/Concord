@@ -141,8 +141,8 @@ var updater = {
 		var val = pat.exec(message.body);
 		console.log(val);
 		if (val) {	
-			node.innerHTML += '<div/><img class="embed_img" src="'
-								+ val[0] + '" height="200" width="200">';
+			node.innerHTML += '<div/><div class="embed_img"'
+								+ ' style="background-image: url(' + val[0] + ')">';
 		}
 		
 		var room = $("room-" + message.room);

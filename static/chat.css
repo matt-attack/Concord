@@ -48,6 +48,11 @@ td {
   vertical-align: top;
   padding-left: 50px;
   padding-top: 10px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  width: 200px;
+  height: 200px;
 }
 
 #chat_area {
