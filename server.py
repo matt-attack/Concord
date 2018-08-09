@@ -76,7 +76,7 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 	def get_current_user(self):
 		user_cookie = self.get_secure_cookie("concordant_user")
 		if user_cookie:
-			return json.loads(user_cookie)
+			return json.loads(user_cookie.decode("utf-8"))
 		return None
 
 	def get_compression_options(self):
@@ -157,22 +157,24 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 	def on_message(self, message):
 		logging.info("got message %r", message)
 		parsed = tornado.escape.json_decode(message)
+		
+		room_name = parsed["room"]
 
 		chat = {
 			"id": str(uuid.uuid4()),
 			"body": parsed["body"],
 			"user": self.current_user["name"],
 			"time": time.time(),
-			"room": parsed["room"]
+			"room": room_name
 		}
 		
 		# Check that the room actually exists
-		room = ChatSocketHandler.rooms[parsed["room"]]
+		room = ChatSocketHandler.rooms[room_name]
 		if room == None:
-			logging.error("The room '" + parsed["room"] + "' does not exist, ignoring message")
+			logging.error("The room '" + room_name + "' does not exist, ignoring message")
 			return
 			
-		chat["html"] = tornado.escape.linkify(parsed["body"]);
+		chat["html"] = tornado.escape.linkify(parsed["body"], extra_params='target="_blank"');
 		ChatSocketHandler.update_cache(room, chat)
 		ChatSocketHandler.send_updates(chat)
 

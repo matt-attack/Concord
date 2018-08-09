@@ -22,6 +22,13 @@ document.addEventListener("DOMContentLoaded", function() {
 			return false;
 		}
 	});
+	$("messageform").addEventListener("keyup", function(e) {
+		if (e.keyCode == 27) { //Escape
+			// Scroll to the bottom
+			var inbox = $("inbox");
+			inbox.scrollTop = inbox.scrollHeight - inbox.clientHeight;
+		}
+	});
 	$("message").select();
 	updater.start();
 });
@@ -76,6 +83,8 @@ var updater = {
 				else {
 					current_room = room_name;
 					$("header").innerHTML = room_name + ": " + description;
+					var inbox = $("inbox");
+					inbox.scrollTop = inbox.scrollHeight - inbox.clientHeight;
 				}
 				
 				// Need to also add room links
@@ -92,6 +101,8 @@ var updater = {
 					room.style.display = "";
 					current_room = room_name;
 					$("header").innerHTML = room_name + ": " + room.description;
+					var inbox = $("inbox");
+					inbox.scrollTop = inbox.scrollHeight - inbox.clientHeight;
 					return false;
 				}.bind(room_name));
 				$("rooms").append(room_button);
@@ -134,6 +145,15 @@ var updater = {
 								+ val[0] + '" height="200" width="200">';
 		}
 		
-		$("room-"+message.room).append(node);
+		var room = $("room-" + message.room);
+		room.append(node);
+		
+		var inbox = $("inbox");
+		// Scroll the room down if I can
+		var isScrolledToBottom = inbox.scrollHeight - inbox.clientHeight <= inbox.scrollTop + 21;
+
+		if (isScrolledToBottom) {
+			inbox.scrollTop = inbox.scrollHeight - inbox.clientHeight;
+		}
 	}
 };
