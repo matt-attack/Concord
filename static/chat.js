@@ -29,6 +29,13 @@ document.addEventListener("DOMContentLoaded", function() {
 			inbox.scrollTop = inbox.scrollHeight - inbox.clientHeight;
 		}
 	});
+	
+	window.setInterval(function() {
+		if (updater.connecting == false && updater.connected == false) {
+			updater.start();
+		}
+		
+	}.bind(updater), 5000);
 	$("message").select();
 	updater.start();
 });
@@ -46,10 +53,44 @@ var current_room = "General";
 
 var updater = {
 	socket: null,
+	
+	connecting: false,
+	connected: false,
+	
+	disconnect: function() {
+		if (updater.socket != null) {
+			updater.socket.close();
+		}
+		updater.socket = null;
+		updater.connected = false;
+		updater.connecting = false;
+		console.log("Disconnected");
+		
+		$("inbox").innerHTML = "";
+		$("room_list_area").innerHTML = "";
+		$("users_list_area").innerHTML = "";
+		rooms = [];
+	},
 
 	start: function() {
 		var url = "ws://" + location.host + "/chatsocket";
+		updater.connecting = true;
 		updater.socket = new WebSocket(url);
+		updater.socket.addEventListener("open", function(event) {
+			updater.connecting = false;
+			updater.connected = true;
+			
+			console.log("Connected");
+		}.bind(updater));
+		updater.socket.addEventListener("close", function(event) {
+			console.log("Socket closed");
+			updater.disconnect();
+		}.bind(updater));
+		updater.socket.addEventListener("error", function(event) {
+			console.log("Socket error");
+			updater.disconnect();
+		}.bind(updater));
+		
 		updater.socket.onmessage = function(event) {
 			var jdata = JSON.parse(event.data);
 			if (jdata["add_user"] != null) {
@@ -57,7 +98,7 @@ var updater = {
 				user_button.id = "user-button-" + jdata["add_user"];
 				user_button.className = "user_button";
 				user_button.innerHTML = jdata["add_user"];
-				$("users").append(user_button);
+				$("users_list_area").append(user_button);
 			}
 			else if (jdata["remove_user"] != null) {
 				var elem = document.getElementById("user-button-" + jdata["remove_user"]);
@@ -105,7 +146,7 @@ var updater = {
 					inbox.scrollTop = inbox.scrollHeight - inbox.clientHeight;
 					return false;
 				}.bind(room_name));
-				$("rooms").append(room_button);
+				$("room_list_area").append(room_button);
 			}
 			else {
 				updater.showMessage(jdata);
