@@ -51,23 +51,7 @@ class MainHandler(tornado.web.RequestHandler):
 
 class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 	waiters = set()
-	rooms = {
-		"General": {
-			"description": "Random Stuff",
-			"cache": [],
-			"cache_size": 200
-		},
-		"WAYWO": {
-			"description": "What are YOU working on?",
-			"cache": [],
-			"cache_size": 200
-		},
-		"Programming-Help": {
-			"description": "The helpful place",
-			"cache": [],
-			"cache_size": 200
-		}
-	}
+	rooms = {}
 	cache = []
 	cache_size = 200
 	
@@ -121,6 +105,16 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 		ChatSocketHandler.waiters.remove(self)
 		
 		ChatSocketHandler.remove_user(name)
+		
+	@classmethod
+	def add_room(cls, name, description):
+		cls.rooms[name] = {
+			"description": description,
+			"cache": [],
+			"cache_size": 200
+		};
+		
+		cls.message("Welcome to " + name, "SYSTEM", name)
 
 	@classmethod
 	def update_cache(cls, room, chat):
@@ -157,13 +151,14 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 	def on_message(self, message):
 		logging.info("got message %r", message)
 		parsed = tornado.escape.json_decode(message)
-		
-		room_name = parsed["room"]
-
+		self.message(parsed["body"], self.current_user["name"], parsed["room"]);
+	
+	@classmethod
+	def message(self, message, user, room_name):
 		chat = {
 			"id": str(uuid.uuid4()),
-			"body": parsed["body"],
-			"user": self.current_user["name"],
+			"body": message,
+			"user": user,
 			"time": time.time(),
 			"room": room_name
 		}
@@ -174,7 +169,7 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 			logging.error("The room '" + room_name + "' does not exist, ignoring message")
 			return
 			
-		chat["html"] = tornado.escape.linkify(parsed["body"], extra_params='target="_blank"');
+		chat["html"] = tornado.escape.linkify(message, extra_params='target="_blank"');
 		ChatSocketHandler.update_cache(room, chat)
 		ChatSocketHandler.send_updates(chat)
 
@@ -191,6 +186,9 @@ class LoginHandler(tornado.web.RequestHandler):
 
 def main():
 	tornado.options.parse_command_line()
+	ChatSocketHandler.add_room("General", "Random Stuff")
+	ChatSocketHandler.add_room("WAYWO", "What are YOU working on?")
+	ChatSocketHandler.add_room("Programming-Help", "The helpful place.")
 	app = Application()
 	app.listen(options.port)
 	tornado.ioloop.IOLoop.current().start()
