@@ -63,13 +63,15 @@ td {
 
 #text_block {
   height: 100%;
-  width: 100%;
+  width: 0;
+  flex: 70 70 auto;
 }
 
 #users {
   width: 180px;
   font-size: 16px;
   padding: 10px;
+  flex: 0 0 auto
 }
 
 #users_title {
@@ -77,9 +79,10 @@ td {
 }
 
 #rooms {
-  width: 260px;
+  width: 220px;
   font-size: 16pt;
   background: #707070;
+  flex: 0 0 auto;
 }
 
 #rooms_title {
@@ -125,6 +128,7 @@ td {
   width: 100%;
   padding-left: 10px;
   box-sizing: border-box;
+  overflow-wrap: break-word;
 }
 
 #inbox .message {

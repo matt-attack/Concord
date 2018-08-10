@@ -6,6 +6,7 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
+import tornado.gen
 import os.path
 import uuid
 import time
@@ -68,12 +69,19 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 		return {}
 
 	def open(self):
+		# Add the username to the list if it hasnt been already
+		name = self.current_user["name"]
+		if ChatSocketHandler.users.get(name) == None:
+			ChatSocketHandler.users[name] = 1
+			ChatSocketHandler.add_user(name)
+		else:
+			ChatSocketHandler.users[name] = ChatSocketHandler.users[name] + 1
+			
 		ChatSocketHandler.waiters.add(self)
 		
-		name = self.current_user["name"]
+		# Send all connected users
 		for user in ChatSocketHandler.users:
-			if user != name:
-				self.write_message({"add_user": user})
+			self.write_message({"add_user": user})
 		
 		# Send the client all of the available rooms
 		for room in ChatSocketHandler.rooms:
@@ -93,18 +101,18 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 				self.write_message(msg)
 			except:
 				logging.error("Error sending message", exc_info=True)
-		
-		if ChatSocketHandler.users.get(name) == None:
-			ChatSocketHandler.users[name] = True
-			ChatSocketHandler.add_user(name)
-
+	
+			
 	def on_close(self):
 		print("Closed")
 		name = self.current_user["name"]
-		del ChatSocketHandler.users[name]
-		ChatSocketHandler.waiters.remove(self)
 		
-		ChatSocketHandler.remove_user(name)
+		ChatSocketHandler.users[name] = ChatSocketHandler.users[name] - 1
+		if ChatSocketHandler.users[name] == 0:
+			del ChatSocketHandler.users[name]
+			ChatSocketHandler.remove_user(name)
+			
+		ChatSocketHandler.waiters.remove(self)
 		
 	@classmethod
 	def add_room(cls, name, description):
@@ -151,6 +159,10 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 	def on_message(self, message):
 		logging.info("got message %r", message)
 		parsed = tornado.escape.json_decode(message)
+		if (parsed["body"] == ""):
+			return#Ignore empty messages
+			
+		# Do rate limit here
 		self.message(parsed["body"], self.current_user["name"], parsed["room"]);
 	
 	@classmethod
