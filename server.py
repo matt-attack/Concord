@@ -79,6 +79,8 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 			
 		ChatSocketHandler.waiters.add(self)
 		
+		self.last_message = time.time() - 1.0
+		
 		# Send all connected users
 		for user in ChatSocketHandler.users:
 			self.write_message({"add_user": user})
@@ -157,6 +159,12 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 				logging.error("Error sending message", exc_info=True)
 
 	def on_message(self, message):
+		cur_time = time.time()
+		if cur_time - self.last_message < 0.3:
+			return
+		
+		self.last_message = cur_time
+		
 		logging.info("got message %r", message)
 		parsed = tornado.escape.json_decode(message)
 		if (parsed["body"] == ""):
