@@ -7,15 +7,29 @@ import tornado.options
 import tornado.web
 import tornado.websocket
 import tornado.gen
+import tornado.httpclient
 import os.path
 import uuid
 import time
 import json
+import time
 
 from tornado.options import define, options
 
-define("port", default=8888, help="run on the given port", type=int)
+define("port", default=80, help="run on the given port", type=int)
 
+from random import randrange
+from datetime import timedelta
+
+def random_date(start, end):
+    """
+    This function will return a random datetime between two datetime 
+    objects.
+    """
+    delta = end - start
+    int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
+    random_second = randrange(int_delta)
+    return start + timedelta(seconds=random_second)
 
 class Application(tornado.web.Application):
 	def __init__(self):
@@ -24,6 +38,9 @@ class Application(tornado.web.Application):
 			(r"/chatsocket", ChatSocketHandler),
 			(r"/login", LoginHandler),
 			(r"/logout", LogoutHandler),
+                        (r"/dilbert", DilbertHandler),
+                        (r"/dilbert_mm", DilbertHandler),
+                        (r"/garfield", GarfieldHandler)
 		]
 		settings = dict(
 			cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
@@ -38,6 +55,80 @@ class LogoutHandler(tornado.web.RequestHandler):
 		self.clear_cookie("concordant_user")
 		self.redirect(self.get_argument("next", "/"))
 
+import datetime
+class DilbertHandler(tornado.web.RequestHandler):
+        def get(self):
+                self.write('{ "color": "green", "message": "https://assets.amuniversal.com/03a410b0a089012f2fe600163e41dd5b.jpg"", "notify": false, "message_format": "text" }')
+
+        def post(self):
+                data = str(self.request.body)
+                print(data)
+                print(self.request.arguments)
+                text = data[data.find('dilbert')+1 :]
+                text = text[7:text.find('"')]
+                if self.request.arguments.get("text"):
+                  text = str(self.request.arguments["text"][0])[2:-1]
+                print("String was: " + text)
+ 
+                load_url = None
+                if len(text) > 3:
+                  load_url = "https://dilbert.com/search_results?terms="+text.replace(' ', '+')
+                  
+                d1 = datetime.datetime(1989,4,16)
+                d2 = datetime.datetime.today()#time.strptime('1/1/2019 4:50 AM', '%m/%d/%Y %I:%M %p')
+
+                time = str(random_date(d1, d2))
+                time = time[:time.find(' ')]
+                if load_url == None:
+                  load_url = "http://dilbert.com/strip/"+time
+
+                print("Loading: " + load_url)
+                client = tornado.httpclient.HTTPClient()
+                data = str(client.fetch(load_url).body)
+                url = data[data.find("//assets.amuniversal.com/"):]
+                url = "http:" + url[:url.find('"')] + ".jpg"
+                print(url)
+                print("Post callback")
+                print(self.request.body)
+                self.write({ "response_type": "in_channel", "text": url, "color": "green", "message": url, "notify": False, "message_format": "text" })
+                #self.write({ "text": url })
+
+        def check_xsrf_cookie(thing):
+                print("checking cookie")
+
+class GarfieldHandler(tornado.web.RequestHandler):
+        def get(self):
+                self.write("I hate mondays.")
+
+        def post(self):
+                data = str(self.request.body)
+                text = data[data.find('/garfield'):]
+                text = text[10:text.find('"')].replace(' ', '+')
+                
+                d1 = datetime.datetime(1990,1,1)
+                d2 = datetime.datetime.today()
+
+                rd = random_date(d1, d2)
+                time = str(rd)
+                time = time[:time.find(' ')]
+                load_url = None
+                if len(text) > 3:
+                  client = tornado.httpclient.HTTPClient()
+                  #print(text)
+                  data = str(client.fetch("http://garfield.com/comic?keywords=" + text).body)
+                  #print(data)
+                  url = data[data.find("//d1ejxu6vysztl5.cloudfront.net/comics/garfield"):]
+                  image = "http:" + url[:url.find('"')]
+                  self.write({"text": image, "response_type": "in_channel", "color": "green", "message": image, "notify": False, "message_format": "text"})
+
+                  return
+                if load_url == None:
+                  load_url = "https://d1ejxu6vysztl5.cloudfront.net/comics/garfield/"+str(rd.year)+"/"+str(rd.year)+"-"+str(rd.month).zfill(2)+"-"+str(rd.day).zfill(2)+".gif"
+
+                self.write({"response_type": "in_channel", "text": load_url, "color": "green", "message": load_url, "notify": False, "message_format": "text"})
+
+        def check_xsrf_cookie(thing):
+                print("checking cookie")
 
 class MainHandler(tornado.web.RequestHandler):
 	def get(self):
@@ -210,7 +301,11 @@ def main():
 	ChatSocketHandler.add_room("WAYWO", "What are YOU working on?")
 	ChatSocketHandler.add_room("Programming-Help", "The helpful place.")
 	app = Application()
-	app.listen(options.port)
+	#app.listen(options.port)
+	app.listen(443, ssl_options={
+          "certfile": "/etc/letsencrypt/live/concordant.ml/fullchain.pem",
+          "keyfile": "/etc/letsencrypt/live/concordant.ml/privkey.pem",
+        })
 	tornado.ioloop.IOLoop.current().start()
 
 

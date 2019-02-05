@@ -73,7 +73,7 @@ var updater = {
 	},
 
 	start: function() {
-		var url = "ws://" + location.host + "/chatsocket";
+		var url = "wss://" + location.host + "/chatsocket";
 		updater.connecting = true;
 		updater.socket = new WebSocket(url);
 		updater.socket.addEventListener("open", function(event) {
