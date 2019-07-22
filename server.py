@@ -71,13 +71,17 @@ class DilbertHandler(tornado.web.RequestHandler):
                 print("String was: " + text)
  
                 load_url = None
-                if len(text) > 3:
+                if len(text) > 3 and text != "latest":
                   load_url = "https://dilbert.com/search_results?terms="+text.replace(' ', '+')
                   
                 d1 = datetime.datetime(1989,4,16)
                 d2 = datetime.datetime.today()#time.strptime('1/1/2019 4:50 AM', '%m/%d/%Y %I:%M %p')
 
-                time = str(random_date(d1, d2))
+                if text == "latest":
+                  time = str(d2)
+                else:  
+                  time = str(random_date(d1, d2))
+                
                 time = time[:time.find(' ')]
                 if load_url == None:
                   load_url = "http://dilbert.com/strip/"+time
@@ -86,7 +90,7 @@ class DilbertHandler(tornado.web.RequestHandler):
                 client = tornado.httpclient.HTTPClient()
                 data = str(client.fetch(load_url).body)
                 url = data[data.find("//assets.amuniversal.com/"):]
-                url = "http:" + url[:url.find('"')] + ".jpg"
+                url = "![Dilbert](http:" + url[:url.find('"')] + ".jpg)"
                 print(url)
                 print("Post callback")
                 print(self.request.body)
